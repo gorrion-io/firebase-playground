@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Exercise 1</title>
+    <style>
+        body {
+            margin: 0 auto;
+            max-width: 40em;
+            font-family: "Helvetica", "Arial", sans-serif;
+            line-height: 1.5;
+            padding: 4em 1em;
+            color: #555;
+        }
+
+        strong,
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        a {
+            color: #e81c4f;
+        }
+
+        a:hover {
+            color: #660000
+        }
+
+        a.verify {
+            float: right;
+        }
+
+        h3 {
+            clear: both;
+        }
+
+        h2 {
+            margin-top: 1em;
+            padding-top: 1em;
+        }
+    </style>
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.0/firebase-firestore.js"></script>
+<script src="firebase.config.js"></script>
+<script>
+
+    const RANDOM_VALUE = "THIS_VALUE_IS_RANDOM_I_PROMISE"
+
+    firebase.initializeApp(config)
+    var db = firebase.firestore()
+
+    async function login() {
+        const provider = new firebase.auth.GoogleAuthProvider()
+        provider.addScope('https://www.googleapis.com/auth/userinfo.profile')
+        try {
+            const result = await firebase.auth().signInWithPopup(provider)
+            return result.user
+        }
+        catch (error) {
+            console.error(error)
+            swal(
+                'Can\'t login',
+                error.message + '<br/><br/> Check console for error details',
+                'error'
+            )
+        }
+    }
+
+    async function verifyReq1() {
+        await firebase.auth().signOut()
+        try {
+            await db.collection("posts").add({
+                title: "t1",
+                content: "c1"
+            })
+            swal(
+                'Incorrect',
+                'User was able to add post whithout being logged in',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+        const user = await login()
+        try {
+            await db.collection("posts").add({
+                title: "t1",
+                content: "c1",
+                authorId: user.uid
+            })
+            swal(
+                'Correct',
+                'All good, carry on!',
+                'success'
+            )
+        }
+        catch (error) {
+            console.log(error)
+            swal(
+                'Incorrect',
+                'User was unable to add post despite being logged in',
+                'error'
+            )
+        }
+    }
+
+    async function verifyReq2() {
+        await firebase.auth().signOut()
+        try {
+            const data = await db.collection("posts").get()
+            console.log(data)
+            swal(
+                'Correct',
+                'All good, carry on!',
+                'success'
+            )
+        }
+        catch (error) {
+            console.log(error)
+            swal(
+                'Incorrect',
+                'Unauthenticated user was not able to read the data',
+                'error'
+            )
+        }
+    }
+
+    async function verifyReq3() {
+        const user = await login()
+        try {
+            await db.collection("posts").add({
+                content: "c1",
+                authorId: user.uid
+            })
+            swal(
+                'Incorrect',
+                'Post without title can be added',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+        try {
+            await db.collection("posts").add({
+                title: "t1",
+                authorId: user.uid
+            })
+            swal(
+                'Incorrect',
+                'Post without content can be added',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+        swal(
+            'Correct',
+            'All good, carry on!',
+            'success'
+        )
+    }
+
+    async function verifyReq4() {
+        const user = await login()
+        try {
+            await db.collection("posts").add({
+                title: "t1",
+                content: "c1"
+            })
+            swal(
+                'Incorrect',
+                'Post without authorId can be added',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+        try {
+            await db.collection("posts").add({
+                title: "t1",
+                content: "c1",
+                authorId: RANDOM_VALUE
+            })
+            swal(
+                'Incorrect',
+                'Post with random authorId can be added',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+        swal(
+            'Correct',
+            'All good, carry on!',
+            'success'
+        )
+    }
+
+    async function verifyReq5() {
+        await firebase.auth().signOut()
+        const data = await db.collection("posts").get()
+        const posts = data.docs.map(d => ({ id: d.id, ...d.data() }))
+        const post = posts.find(d => d.authorId && d.authorId != RANDOM_VALUE)
+    
+        if(!post) {
+            swal(
+                'Can\'t find valid post for this',
+                'Try running Requirement 1 validation before this one',
+                'warning'
+            )
+
+            return
+        }
+
+        try {
+            const postRef = await db.collection("posts").doc(post.id)
+            await postRef.update({ content: 'c0' })
+            swal(
+                'Incorrect',
+                'Post can be updated by anyone',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+        try {
+            const postRef = await db.collection("posts").doc(post.id)
+            await postRef.delete()
+            swal(
+                'Incorrect',
+                'Post can be deleted by anyone',
+                'error'
+            )
+            return
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+        swal(
+            'Correct',
+            'All good, carry on!',
+            'success'
+        )
+    }
+
+</script>
+
+<body>
+    <h2>Configure Firebase Rules</h2>
+    <p>
+        <strong>Before you begin</strong> please open file
+        <em>firebase.config.js</em> and fill your firebase project data, then
+        <a href="javascript:window.location.reload()">refresh this page</a>. The excersise is to configure database security rules to meet requirements listed below. Each
+        of the requirements can be tested by clicking on
+        <em>verify</em> button.
+    </p>
+    <div>
+        <h3>Requrement 1:</h3>
+        <p>
+            Database should contain collection of user posts named
+            <em>posts</em>. Only logged users should be able to create new posts to this database.
+        </p>
+        <p>
+            <a class="verify" href="javascript:verifyReq1()">Verify</a>
+        </p>
+    </div>
+    <div>
+        <h3>Requirement 2:</h3>
+        <p>
+            List of all the posts and individual posts content should be public and available to read for all authenticated and unauthenticated
+            users
+        </p>
+        <p>
+            <a class="verify" href="javascript:verifyReq2()">Verify</a>
+        </p>
+    </div>
+    <div>
+        <h3>Requirement 3:</h3>
+        <p>
+            Each post must contain
+            <em>title</em> and
+            <em>content</em>. Both of those fields are required.
+        </p>
+        <p>
+            <a class="verify" href="javascript:verifyReq3()">Verify</a>
+        </p>
+    </div>
+    <div>
+        <h3>Requirement 4:</h3>
+        <p>
+            Each post must contain field
+            <em>author</em> set to id of a user who adds this post.
+        </p>
+        <p>
+            <a class="verify" href="javascript:verifyReq4()">Verify</a>
+        </p>
+    </div>
+    <div>
+        <h3>Requirement 5:</h3>
+        <p>
+            Only author should be allowed to delete or edit his own posts.
+        </p>
+        <p>
+            <a class="verify" href="javascript:verifyReq5()">Verify</a>
+        </p>
+    </div>
+</body>
+
+</html>

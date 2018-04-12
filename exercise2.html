@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Exercise 1</title>
+
+
+
+    <!--- THE EXERCISE CODE SHOULD BE ADDED BELOW THIS -->
+
+    <script>
+    
+        function listenForPosts() {
+            const db = firebase.firestore()
+            const postsRef = db.collection('posts')
+
+            // Requirement 1: make sure that
+            // each time a document in collection 
+            // is updated by anyone method bindList(...)
+            // will be called.
+            //
+            // bindList accepts one parameter which is
+            // array of plain objects containing title
+            // and content ex. [{ title: 'xxx', content: 'yyy' }, ...]
+        }
+
+        function login() {
+
+            const provider = new firebase.auth.GoogleAuthProvider()
+            provider.addScope('https://www.googleapis.com/auth/userinfo.profile')
+            
+            // Requirement 2: authenticate user
+            // using Google provider by invoking
+            // signInWithPopupMessage from firebase auth
+            // and return logged user in a promise
+        }
+
+        function sendPost(title, content, authorId) {
+            const db = firebase.firestore()
+            const postsRef = db.collection('posts')
+
+            // Requirement 3: when this method is called 
+            // add new post to collection of posts
+        }
+
+    
+    </script>
+
+
+    <!--- THE EXERCISE CODE SHOULD BE ADDED ABOVE THIS -->
+
+
+    <style>
+        body {
+            margin: 0 auto;
+            max-width: 40em;
+            font-family: "Helvetica", "Arial", sans-serif;
+            line-height: 1.5;
+            padding: 4em 1em;
+            color: #555;
+        }
+
+        strong,
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        a {
+            color: #e81c4f;
+        }
+
+        a:hover {
+            color: #660000
+        }
+
+        a.verify {
+            float: right;
+        }
+
+        h3 {
+            clear: both;
+        }
+
+        h2 {
+            margin-top: 1em;
+            padding-top: 1em;
+        }
+
+        input[type=text] {
+            border: 0px;
+            border-bottom: solid 1px #555;
+            outline: none;
+        }
+
+        input[type=submit] {
+            background: #333333;
+            color: white;
+            border: 0;
+            padding: 1em;
+            cursor: pointer;
+        }
+
+        input[type=submit]:hover {
+            background: #555555
+        }
+
+    </style>
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.0/firebase-firestore.js"></script>
+<script src="firebase.config.js"></script>
+<script>
+    var config = {
+        apiKey: "AIzaSyAr4WJE5rt1uVv9qAiS7lhpjjBaPgy9gnQ",
+        authDomain: "beta-98c3f.firebaseapp.com",
+        databaseURL: "https://beta-98c3f.firebaseio.com",
+        projectId: "beta-98c3f",
+        storageBucket: "beta-98c3f.appspot.com",
+        messagingSenderId: "354354866924"
+    }
+
+    firebase.initializeApp(config)
+
+    const loginPromise = login()
+    if(loginPromise)
+        loginPromise.then(u => window.lu = u)
+
+    function bindList(posts) {
+        const html = posts.map(p => `<p><em>${p.title}:<em> ${p.content}<p>`).join('')
+        document.getElementById('posts').innerHTML = posts.length == 0 ? '<em>no posts yet</em>' : html
+    }
+
+    function addPost() {
+        const title = document.getElementById('title')
+        const content = document.getElementById('content')
+
+        sendPost(title.value, content.value, lu.uid)
+
+        title.value = content.value = ''
+    }
+</script>
+
+<body>
+    <h2>Use Firebase in web application</h2>
+    <p>
+        Find places in code with comments instructing how to make this application work.
+    </p>
+    <h3>New post</h3>
+    <form onsubmit="addPost(); return false">
+        <p><input id="title" type="text" required placeholder="Title" /></p>
+        <p><input id="content" type="text" required placeholder="Content" /></p>
+        <p></p><input type="submit" /></p> 
+    </form>
+    <h3>Posts</h3>
+    <div id="posts"></div>
+
+    <script>
+        bindList([])
+        listenForPosts()
+    </script>
+</body>
+
+
+</html>
